@@ -1,0 +1,250 @@
+---
+title: "Economic Influencers of AIIB Subscriptions"
+author: "Nikky Xiong"
+date: '2019-11-19'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r global options,echo=F}
+set.seed(1:7)
+library(knitr)
+opts_chunk$set(warning = F,message = F,error = F)
+```
+
+# Read in and Clean Data
+
+```{r, message=FALSE, warning=FALSE,echo=FALSE}
+library(readr)
+library(readxl)
+library(dplyr)
+```
+
+### AIIB Subscription and Voting Number
+
+```{r}
+AIIB <- read_excel("data/AIIB.xlsx")
+summary(AIIB)
+```
+
+### GDP (current USD)
+
+```{r, warning=FALSE, message=FALSE}
+GDP <- read_csv("data/GDP.csv", col_names = T, skip = 4)
+colnames(GDP)[colnames(GDP)== "Country Name"] <- "country_name"
+colnames(GDP)[colnames(GDP)=="2018"] <- "GDP"
+GDP <- GDP %>% select(country_name, GDP)
+AIIB <- left_join(AIIB, GDP, by = "country_name")
+summary(AIIB$GDP)
+AIIB %>% 
+    filter(is.na(GDP) == T)
+```
+
+### GDP per Capita (current USD)
+
+```{r, warning=FALSE, message=FALSE}
+GDP_per_capita <- read_csv("data/GDP_per_capita.csv", 
+                           col_names = T, skip = 4)
+colnames(GDP_per_capita)[colnames(GDP_per_capita)== "Country Name"] <- "country_name"
+colnames(GDP_per_capita)[colnames(GDP_per_capita)=="2018"] <- "GDP_per_capita"
+GDP_per_capita <- GDP_per_capita %>% 
+    select(country_name, GDP_per_capita)
+AIIB <- left_join(AIIB, GDP_per_capita, by = "country_name")
+summary(AIIB$GDP_per_capita)
+AIIB %>% 
+    filter(is.na(GDP_per_capita) == T)
+```
+
+### GDP Growth Rate
+
+```{r, warning=FALSE, message=FALSE}
+GDP_growth_rate <- read_csv("data/GDP_growth_rate.csv", 
+                           col_names = T, skip = 4)
+colnames(GDP_growth_rate)[colnames(GDP_growth_rate)== "Country Name"] <- "country_name"
+colnames(GDP_growth_rate)[colnames(GDP_growth_rate)=="2018"] <- "GDP_growth_rate"
+GDP_growth_rate <- GDP_growth_rate %>% 
+    select(country_name, GDP_growth_rate)
+AIIB <- left_join(AIIB, GDP_growth_rate, by = "country_name")
+summary(AIIB$GDP_growth_rate)
+AIIB %>% 
+    filter(is.na(GDP_growth_rate) == T)
+```
+
+### GNI per Capita (current USD)
+
+```{r, warning=FALSE, message=FALSE}
+GNI_per_capita <- read_csv("data/GNI_per_capita.csv", 
+                           col_names = T, skip = 4)
+colnames(GNI_per_capita)[colnames(GNI_per_capita)== "Country Name"] <- "country_name"
+colnames(GNI_per_capita)[colnames(GNI_per_capita)=="2018"] <- "GNI_per_capita"
+GNI_per_capita <- GNI_per_capita %>% 
+    select(country_name, GNI_per_capita)
+AIIB <- left_join(AIIB, GNI_per_capita, by = "country_name")
+summary(AIIB$GNI_per_capita)
+AIIB %>% 
+    filter(is.na(GNI_per_capita) == T)
+```
+
+### Unemployment Rate 
+
+```{r, warning=FALSE, message=FALSE}
+unemployment <- read_csv("data/unemployment.csv", 
+                           col_names = T, skip = 4)
+colnames(unemployment)[colnames(unemployment)== "Country Name"] <- "country_name"
+colnames(unemployment)[colnames(unemployment)=="2018"] <- "unemployment"
+unemployment <- unemployment %>% 
+    select(country_name, unemployment)
+AIIB <- left_join(AIIB, unemployment, by = "country_name")
+summary(AIIB$unemployment)
+AIIB %>% 
+    filter(is.na(unemployment) == T)
+```
+
+### Inflation Rate
+
+```{r, warning=FALSE, message=FALSE}
+inflation <- read_csv("data/inflation.csv", 
+                           col_names = T, skip = 4)
+colnames(inflation)[colnames(inflation)== "Country Name"] <- "country_name"
+colnames(inflation)[colnames(inflation)=="2018"] <- "inflation"
+inflation <- inflation %>% 
+    select(country_name, inflation)
+AIIB <- left_join(AIIB, inflation, by = "country_name")
+summary(AIIB$inflation)
+AIIB %>% 
+    filter(is.na(inflation) == T)
+```
+
+### Foreign Direct Investment, Net Inflows (BoP, current USD) 
+
+```{r, warning=FALSE, message=FALSE}
+FDI <- read_csv("data/FDI.csv", col_names = T, skip = 4)
+colnames(FDI)[colnames(FDI)== "Country Name"] <- "country_name"
+colnames(FDI)[colnames(FDI)=="2018"] <- "FDI"
+FDI <- FDI %>% 
+    select(country_name, FDI)
+AIIB <- left_join(AIIB, FDI, by = "country_name")
+summary(AIIB$FDI)
+```
+
+### Table 1: Summary Statistics
+
+```{r, echo=FALSE}
+summary(AIIB)
+```
+
+### Table 2: Linear Regression Model of Subscriptions on Voting Power
+
+```{r, echo=FALSE}
+lm1 <- lm(subscription_in_million ~ voting_num,
+          data = AIIB)
+summary(lm1)
+```
+
+### Table 3: Linear Regression Model of Subscriptions on Voting Power, Controlling Regional or Not
+
+```{r, echo=FALSE}
+lm2 <- lm(subscription_in_million ~ voting_num*region_or_not,
+          data = AIIB)
+summary(lm2)
+```
+
+### Table 4: Linear Regression Model of Subscriptions on Other Possible Influencing Factors
+
+```{r, echo=FALSE}
+lm3 <- lm(subscription_in_million ~ voting_num + GDP + GDP_per_capita + GDP_growth_rate + GNI_per_capita + unemployment + inflation + FDI,
+          data = AIIB)
+summary(lm3)
+```
+
+### Table 5: Linear Regression Model of Subscriptions on Other Possible Influencing Factors, Controlling Regional or Not
+
+```{r, echo=FALSE}
+lm4 <- lm(subscription_in_million ~ voting_num*region_or_not + GDP + GDP_per_capita + GDP_growth_rate + GNI_per_capita + unemployment + inflation + FDI,
+          data = AIIB)
+summary(lm4)
+```
+
+### Table 6: Modified Linear Regression Model of AIIB Subscriptions on Other Potential Influencing Factors, Controlling Regional or Not
+
+```{r, echo=FALSE}
+AIIB <- AIIB[!(AIIB$country_name == "Iran, Islamic Rep."),] 
+lm6 <- lm(subscription_in_million ~ voting_num*region_or_not + GDP + GDP_per_capita + GDP_growth_rate + GNI_per_capita + inflation + FDI,
+          data = AIIB)
+summary(lm6)
+```
+
+### F Test
+
+```{r}
+lm2 <- lm(subscription_in_million ~ voting_num*region_or_not,
+          data = AIIB)
+lm2B <- lm(subscription_in_million ~ voting_num*region_or_not
+           + GDP,
+          data = AIIB)
+anova(lm2, lm2B)
+```
+
+```{r}
+lm2C <- lm(subscription_in_million ~ voting_num*region_or_not
+           + GDP + GDP_per_capita,
+          data = AIIB)
+anova(lm2B, lm2C)
+```
+
+```{r}
+lm2D <- lm(subscription_in_million ~ voting_num*region_or_not
+           + GDP + GDP_per_capita + GDP_growth_rate,
+          data = AIIB)
+anova(lm2C, lm2D)
+```
+
+```{r}
+lm2E <- lm(subscription_in_million ~ voting_num*region_or_not
+           + GDP + GDP_per_capita + GDP_growth_rate + GNI_per_capita,
+          data = AIIB)
+anova(lm2D, lm2E)
+```
+
+```{r}
+AIIB <- AIIB %>% 
+  mutate(lnGDP = log(GDP), lnGDPpc = log(GDP_per_capita), 
+         lnGNIpc = log(GNI_per_capita))
+log_mod <- lm(subscription_in_million ~ voting_num*region_or_not
+              + GDP + GDP_per_capita + GDP_growth_rate +
+              lnGNIpc,
+          data = AIIB)
+anova(lm2D, log_mod)
+```
+
+```{r}
+lm2F <- lm(subscription_in_million ~ voting_num*region_or_not
+           + GDP + GDP_per_capita + GDP_growth_rate + GNI_per_capita
+           + FDI,
+          data = AIIB)
+anova(lm2E, lm2F)
+```
+
+### Final Linear Regression Model of AIIB Subscriptions on Other Variables, Controlling Regional or Not
+
+### Table 7: Final Model
+$$ \textrm{subscription_in_million} = \alpha + \beta_1*\textrm{voting_num} + \beta_2*\textrm{region_or_not} + \beta_3*\textrm{voting_num}*\textrm{region_or_not} + \beta_4*\textrm{GDP} + \beta_4*\textrm{GDP_per_capita} + \beta_5*\textrm{GDP_growth_rate} + \epsilon $$
+
+```{r, echo=FALSE}
+lm_finalA <- lm(subscription_in_million ~ voting_num*region_or_not
+          + GDP + GDP_per_capita + GDP_growth_rate,
+          data = AIIB)
+summary(lm_finalA)
+```
+
+### Logged Final Model:
+$$ \textrm{subscription_in_million} = \alpha + \beta_1*\textrm{voting_num} + \beta_2*\textrm{region_or_not} + \beta_3*\textrm{voting_num}*\textrm{region_or_not} + \beta_4*log(\textrm{GDP}) + \beta_4*log(\textrm{GDP_per_capita}) + \beta_5*\textrm{GDP_growth_rate} + \epsilon$$
+
+```{r, echo=FALSE}
+lm_finalB <- lm(subscription_in_million ~ voting_num*region_or_not
+          + lnGDP + lnGDPpc + GDP_growth_rate,
+          data = AIIB)
+summary(lm_finalB)
+```
